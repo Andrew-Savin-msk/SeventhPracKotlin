@@ -16,8 +16,8 @@ import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
 
-    public lateinit var urlInput: EditText
-    public lateinit var downloadButton: Button
+    private lateinit var urlInput: EditText
+    private lateinit var downloadButton: Button
     public lateinit var imageView: ImageView
     public val executor = Executors.newFixedThreadPool(2)
 
@@ -32,14 +32,20 @@ class MainActivity : AppCompatActivity() {
         downloadButton.setOnClickListener {
             val imageUrl = urlInput.text.toString()
             if (imageUrl.isNotEmpty()) {
-                downloadImage(imageUrl)
+                downloadImage(imageUrl) { isSuccess ->
+                    if (isSuccess) {
+                        Toast.makeText(this, "Изображение успешно загружено и сохранено", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this, "Ошибка загрузки или сохранения изображения", Toast.LENGTH_SHORT).show()
+                    }
+                }
             } else {
                 Toast.makeText(this, "Введите URL", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    public fun downloadImage(url: String) {
+    public fun downloadImage(url: String, callback: (Boolean) -> Unit) {
         executor.execute {
             try {
                 val inputStream: InputStream = URL(url).openStream()
@@ -54,12 +60,15 @@ class MainActivity : AppCompatActivity() {
 
                 // Сохраняем изображение во внутреннюю директорию
                 executor.execute {
-                    saveImage(imageBytes)
+                    val isSaved = saveImage(imageBytes)
+                    runOnUiThread {
+                        callback(isSaved)
+                    }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 runOnUiThread {
-                    Toast.makeText(this, "Ошибка загрузки изображения", Toast.LENGTH_SHORT).show()
+                    callback(false)  // Возвращаем false при ошибке загрузки
                 }
             }
         }
@@ -71,15 +80,9 @@ class MainActivity : AppCompatActivity() {
             val fos = FileOutputStream(file)
             fos.write(imageBytes)
             fos.close()
-            runOnUiThread {
-                Toast.makeText(this, "Изображение сохранено", Toast.LENGTH_SHORT).show()
-            }
             true
         } catch (e: Exception) {
             e.printStackTrace()
-            runOnUiThread {
-                Toast.makeText(this, "Ошибка сохранения изображения", Toast.LENGTH_SHORT).show()
-            }
             false
         }
     }
