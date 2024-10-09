@@ -35,8 +35,22 @@ android {
     }
 }
 
+android {
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
+}
+
 dependencies {
-    testImplementation("org.robolectric:robolectric:4.9")
+    androidTestImplementation("androidx.test.espresso:espressocore:3.5.1")
+    androidTestImplementation("androidx.test.espresso:espressocontrib:3.5.1")
+    androidTestImplementation("androidx.test.espresso:espressointents:3.5.1")
+    androidTestImplementation("androidx.test.espresso:espressoaccessibility:3.5.1")
+    androidTestImplementation("androidx.test.espresso:espressoweb:3.5.1")
+    androidTestImplementation("androidx.test.espresso.idling:idlingconcurrent:3.5.1")
+    testImplementation("org.robolectric:robolectric:4.11.1")
     testImplementation("org.mockito:mockito-core:4.11.0")
     testImplementation("org.mockito:mockito-inline:4.11.0")
     testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")

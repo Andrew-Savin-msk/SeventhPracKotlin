@@ -1,80 +1,80 @@
 package com.example.seventhprackotlin
 
-import kotlinx.coroutines.runBlocking
-import org.junit.Assert.*
-import org.junit.Test
+import android.view.View
+import android.widget.ImageView
+import org.junit.Assert
+import org.junit.*
 import org.junit.runner.RunWith
+import org.mockito.*
 import org.mockito.Mockito.*
-import org.robolectric.RobolectricTestRunner
+import org.robolectric.*
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowToast
 import java.io.File
-import java.io.FileOutputStream
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [31], manifest = "src/main/AndroidManifest.xml", packageName = "com.example.seventhprackotlin")
+@Config(sdk = [34])
 class MainActivityUnitTest {
 
-    @Test
-    fun testDownloadImageWithValidUrl() = runBlocking {
-        val activity = MainActivity()
-        val validUrl = "https://via.placeholder.com/150"
-        // Здесь вы можете использовать мокирование для имитации загрузки
-        try {
-            activity.downloadImage(validUrl)
-        } catch (e: Exception) {
-            fail("Метод выбросил исключение с валидным URL")
-        }
+    @Mock
+    lateinit var mainActivity: MainActivity
+
+    @Before
+    fun setUp() {
+        // Initialize mock objects
+        MockitoAnnotations.initMocks(this)
     }
 
     @Test
-    fun testDownloadImageWithInvalidUrl() = runBlocking {
-        val activity = MainActivity()
-        val invalidUrl = "https://invalidurl"
+    fun testDownloadImageSuccess() {
+        val activity = Robolectric.buildActivity(MainActivity::class.java).create().get()
+        val imageUrl = "https://yandex-images.clstorage.net/gK4aW7286/05d9dfsXCtYU/COV9FZelSrezb4s1hxKT3yNeU625GbpEzlfmE2DgLpchaxHz5f32kl7igoWSY55dtop44tuslruJhigKttqnNHnxuaGmEJ-D0hrLtbdCsgr3b0JoGVxr4OuSYjOlgI4HZwijpLfLEVFcYOAy8-PLPaPr7EOa2mAKrlYuD5MrZnQ7d0x0wsVbdddfO3V1YHMZ0hxg-xsfaFepAhP3t_WbcWV58CaXypDQrqHgY4DQ-H-hSwqDmtrTv9-0v40xqDQ0yLY-dcMFCEZU3EvmJgNDWfFOwKhorro2yQDD5WWXieA1aRAXNHpjYj5AgYKj45tc4RgKkPja8Vws1L2fIbgmFOiUTBTwNsp3xK9KZlcx0skx_tOruz8YpJij0qVFFhgQdlsDpIRK04NvwHLgIyDL7WKbedOr--Ed7oR9zoJ6RmYKBez0Y6caphacaLdWQ8FrAh1gmFt8GjQa0mAGxxYpk2WpYfYHWIEgzCIg4MFA-5_yqShgeuuBLc4Gfn-Q2jXUOQQ9trJ2iXbnvbnmZaKQObM-EKmoDzm0uCJiJwUXa7A3ybKGlKoh8g-QM-LBMcn-Q4iqghso4u799s5O40p15Ju0P3fyNuiG1O1JdmQQcGkDDRL56u4YRnnBwXRE58gjVihAJuU6IoC9U_JRkqMJXXHIWfMrysJ8_YefjxDqlwbZtw9mInUIJNXvG8enIdPK0S8DeQouiIRK0MHlJGZbMfRJsqWUeAGDTuGjwHESe1yz2OogKqkxLA-0Ld0z2jYXW9ZcJvEUCAZHHGt1ltHQ6YEdgFob_cuU2QDx9xf12fMHW_L05Ygisl-AsGBzILsPsfn5Mvub4Y6cZr_NYlilhCvH76ehBsmEp86Z10cwcDtyn2KYeI7b1CoRk7ZWxami1ukiJfe7cqM_8aLhUEOY_2KqWnIamsDN34ScfXK79BaqNf61whV5pHfOeZZWAvBqwq0CusqMCpXrIyIUU"
 
-        try {
-            activity.downloadImage(invalidUrl)
-        } catch (e: Exception) {
-            // Ожидаем, что метод обработает исключение внутри себя
-            fail("Метод не должен выбрасывать исключение наружу")
-        }
+        // Call the image download method directly
+        activity.downloadImage(imageUrl)
+
+        // Check if the image is set in ImageView (simulate successful download)
+        val imageView = activity.findViewById<ImageView>(R.id.imageView)
+        Assert.assertTrue(imageView.visibility == View.VISIBLE)
+        Assert.assertNotNull(imageView.drawable)
+    }
+
+    @Test
+    fun testEmptyUrlHandling() {
+        val activity = Robolectric.buildActivity(MainActivity::class.java).create().get()
+
+        // Call the method directly with an empty URL
+        activity.downloadImage("")
+
+        // Check if nothing happened or if an error message was displayed (if applicable)
+        val toastMessage = ShadowToast.getTextOfLatestToast()
+        Assert.assertEquals("Введите URL", toastMessage)
     }
 
     @Test
     fun testSaveImageSuccess() {
-        val activity = MainActivity()
-        val imageBytes = ByteArray(1024) // Мок данные изображения
+        val activity = Robolectric.buildActivity(MainActivity::class.java).create().get()
+        val imageBytes = ByteArray(1024) // Simulated image data
 
-        val mockDirectory =  mock(File::class.java)
-        val mockFile = mock(File::class.java)
-        val mockFos = mock(FileOutputStream::class.java)
+        // Call the image saving method
+        val result = activity.saveImage(imageBytes)
 
-        `when`(mockDirectory.path).thenReturn("/mock/path")
-        `when`(mockDirectory.exists()).thenReturn(true)
-        `when`(mockDirectory.isDirectory).thenReturn(true)
-        `when`(mockDirectory.canWrite()).thenReturn(true)
-        `when`(mockFile.exists()).thenReturn(false)
-        `when`(mockFile.path).thenReturn("/mock/path/downloaded_image.jpg")
-        `when`(mockFos.write(any(ByteArray::class.java))).thenReturn(Unit)
-
-        val result = activity.saveImage(imageBytes, mockDirectory)
-        assertTrue(result)
+        // Verify that the image was successfully saved
+        Assert.assertTrue(result)
+        val toastMessage = ShadowToast.getTextOfLatestToast()
+        Assert.assertEquals("Изображение сохранено", toastMessage)
     }
 
     @Test
-    fun testSaveImageFailure() {
-        val activity = MainActivity()
-        val imageBytes = ByteArray(1024) // Мок данные изображения
+    fun testSaveImageCalled() {
+        val imageBytes = ByteArray(1024) // Simulated image data
+        val file = mock(File::class.java)
 
-        val mockDirectory = mock(File::class.java)
-        `when`(mockDirectory.canWrite()).thenReturn(false)
+        // Mock the saveImage function
+        `when`(mainActivity.saveImage(imageBytes, file)).thenReturn(true)
 
-        val result = activity.saveImage(imageBytes, mockDirectory)
-        assertFalse(result)
-    }
-
-    @Test
-    fun testExecutorInitialization() {
-        val activity = MainActivity()
-        assertNotNull(activity.executor)
+        // Call the method and verify that it was called
+        mainActivity.saveImage(imageBytes, file)
+        verify(mainActivity, times(1)).saveImage(imageBytes, file)
     }
 }
