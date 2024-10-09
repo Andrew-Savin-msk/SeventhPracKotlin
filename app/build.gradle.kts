@@ -44,12 +44,8 @@ android {
 }
 
 dependencies {
-    androidTestImplementation("androidx.test.espresso:espressocore:3.5.1")
-    androidTestImplementation("androidx.test.espresso:espressocontrib:3.5.1")
-    androidTestImplementation("androidx.test.espresso:espressointents:3.5.1")
-    androidTestImplementation("androidx.test.espresso:espressoaccessibility:3.5.1")
-    androidTestImplementation("androidx.test.espresso:espressoweb:3.5.1")
-    androidTestImplementation("androidx.test.espresso.idling:idlingconcurrent:3.5.1")
+    implementation(libs.androidx.junit.ktx)
+    implementation(project(":app"))
     testImplementation("org.robolectric:robolectric:4.11.1")
     testImplementation("org.mockito:mockito-core:4.11.0")
     testImplementation("org.mockito:mockito-inline:4.11.0")
