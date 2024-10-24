@@ -8,6 +8,7 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.test.espresso.idling.CountingIdlingResource
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -21,6 +22,10 @@ class MainActivity : AppCompatActivity() {
     public lateinit var imageView: ImageView
     public val executor = Executors.newFixedThreadPool(2)
 
+    companion object {
+        val idlingResource = CountingIdlingResource("ImageLoader")
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -31,7 +36,7 @@ class MainActivity : AppCompatActivity() {
 
         downloadButton.setOnClickListener {
             val imageUrl = urlInput.text.toString()
-            if (imageUrl.isNotEmpty()) {
+            if (imageUrl.length != 0) {
                 downloadImage(imageUrl) { isSuccess ->
                     if (isSuccess) {
                         Toast.makeText(this, "Изображение успешно загружено и сохранено", Toast.LENGTH_SHORT).show()

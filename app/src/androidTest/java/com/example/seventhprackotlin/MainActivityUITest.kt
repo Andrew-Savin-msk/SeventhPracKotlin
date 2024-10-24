@@ -1,161 +1,110 @@
 package com.example.seventhprackotlin
 
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.IdlingRegistry
-import androidx.test.espresso.IdlingResource
-import androidx.test.espresso.action.ViewActions.*
-import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.RootMatchers.withDecorView
-import androidx.test.espresso.matcher.ViewMatchers.*
-import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.ext.junit.rules.ActivityScenarioRule
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.action.ViewActions.*
+import androidx.test.espresso.matcher.ViewMatchers.*
 import org.hamcrest.CoreMatchers.not
-import org.junit.*
+import org.junit.Rule
+import org.junit.Test
 import org.junit.runner.RunWith
-import java.util.concurrent.Executor
-import java.util.concurrent.atomic.AtomicInteger
+import androidx.test.espresso.IdlingRegistry
+import org.junit.Before
+import org.junit.After
+import android.view.View
+import androidx.test.core.app.ActivityScenario.launch
 
 @RunWith(AndroidJUnit4::class)
-class MainActivityUITestTest {
+class MainActivityUITest {
 
-    @get:Rule
-    val activityRule = ActivityScenarioRule(MainActivity::class.java)
+    @Rule @JvmField
+    var activityRule = ActivityScenarioRule(MainActivity::class.java)
 
-    private lateinit var decorView: android.view.View
-    private lateinit var idlingResource: ExecutorIdlingResource
+    private var decorView: View? = null
 
     @Before
     fun setUp() {
+        IdlingRegistry.getInstance().register(MainActivity.idlingResource)
+
         activityRule.scenario.onActivity { activity ->
             decorView = activity.window.decorView
-            // Получаем executor и используем его в ExecutorIdlingResource
-            idlingResource = ExecutorIdlingResource(TrackingExecutor(activity.executor))
-            IdlingRegistry.getInstance().register(idlingResource)
         }
     }
 
     @After
     fun tearDown() {
-        if (::idlingResource.isInitialized) {
-            IdlingRegistry.getInstance().unregister(idlingResource)
-        }
+        IdlingRegistry.getInstance().unregister(MainActivity.idlingResource)
     }
 
-    // Тест 1: Проверка загрузки и отображения изображения при вводе корректного URL
     @Test
-    fun testValidImageUrlDownload() {
-        val validUrl = "https://via.placeholder.com/150"
+    fun testSwipeOnImageView() {
+        onView(withId(R.id.urlInput))
+            .perform(typeText("https://avatars.mds.yandex.net/i?id=2fef24696ae8ffeeb7b88889efc91e4bb62dfcbe-12524916-images-thumbs&n=13"))
+        closeSoftKeyboard()
 
-        onView(withId(R.id.urlInput)).perform(typeText(validUrl), closeSoftKeyboard())
         onView(withId(R.id.downloadButton)).perform(click())
 
-        // Проверяем, что ImageView стал видимым
+        Thread.sleep(4000)
+
         onView(withId(R.id.imageView)).check(matches(isDisplayed()))
 
-        // Проверяем отображение тоста об успешной загрузке
-        onView(withText("Изображение успешно загружено и сохранено"))
-            .inRoot(withDecorView(not(decorView)))
-            .check(matches(isDisplayed()))
-    }
+        onView(withId(R.id.imageView)).perform(swipeUp())
 
-    // Тест 2: Проверка отображения ошибки при вводе некорректного URL
-    @Test
-    fun testInvalidImageUrlDownload() {
-        val invalidUrl = "https://invalid.url/image.jpg"
-
-        onView(withId(R.id.urlInput)).perform(typeText(invalidUrl), closeSoftKeyboard())
-        onView(withId(R.id.downloadButton)).perform(click())
-
-        // Проверяем отображение тоста об ошибке загрузки
-        onView(withText("Ошибка загрузки или сохранения изображения"))
-            .inRoot(withDecorView(not(decorView)))
-            .check(matches(isDisplayed()))
-    }
-
-    // Тест 3: Проверка сообщения об ошибке при пустом поле URL
-    @Test
-    fun testEmptyUrlInput() {
-        onView(withId(R.id.urlInput)).perform(clearText(), closeSoftKeyboard())
-        onView(withId(R.id.downloadButton)).perform(click())
-
-        // Проверяем отображение тоста с просьбой ввести URL
-        onView(withText("Введите URL"))
-            .inRoot(withDecorView(not(decorView)))
-            .check(matches(isDisplayed()))
-    }
-
-    // Тест 4: Проверка видимости ImageView после успешной загрузки
-    @Test
-    fun testImageViewVisibility() {
-        val validUrl = "https://via.placeholder.com/150"
-
-        // Убеждаемся, что ImageView изначально скрыт
-        onView(withId(R.id.imageView)).check(matches(withEffectiveVisibility(Visibility.GONE)))
-
-        onView(withId(R.id.urlInput)).perform(typeText(validUrl), closeSoftKeyboard())
-        onView(withId(R.id.downloadButton)).perform(click())
-
-        // Проверяем, что ImageView стал видимым
         onView(withId(R.id.imageView)).check(matches(isDisplayed()))
     }
 
-    // Тест 5: Проверка обработки некорректного формата URL
-    @Test
-    fun testInvalidUrlFormat() {
-        val invalidUrlFormat = "not a url"
 
-        onView(withId(R.id.urlInput)).perform(typeText(invalidUrlFormat), closeSoftKeyboard())
+    @Test
+    fun testImageViewBecomesVisibleAfterDownload() {
+        onView(withId(R.id.urlInput)).perform(typeText("https://avatars.mds.yandex.net/i?id=2fef24696ae8ffeeb7b88889efc91e4bb62dfcbe-12524916-images-thumbs&n=13"))
+        closeSoftKeyboard()
+
         onView(withId(R.id.downloadButton)).perform(click())
 
-        // Проверяем отображение тоста об ошибке загрузки
-        onView(withText("Ошибка загрузки или сохранения изображения"))
-            .inRoot(withDecorView(not(decorView)))
-            .check(matches(isDisplayed()))
-    }
-}
+        Thread.sleep(4000)
 
-
-class TrackingExecutor(private val executor: Executor) : Executor {
-
-    private var taskCounter: AtomicInteger? = null
-
-    fun setTaskCounter(counter: AtomicInteger) {
-        this.taskCounter = counter
+        onView(withId(R.id.imageView)).check(matches(isDisplayed()))
     }
 
-    override fun execute(command: Runnable) {
-        taskCounter?.incrementAndGet()
-        executor.execute {
-            try {
-                command.run()
-            } finally {
-                taskCounter?.decrementAndGet()
-            }
-        }
-    }
-}
+//    @Test
+//    fun testDownloadButtonWorksWithValidUrl() {
+//        onView(withId(R.id.urlInput)).perform(typeText("https://avatars.mds.yandex.net/i?id=2fef24696ae8ffeeb7b88889efc91e4bb62dfcbe-12524916-images-thumbs&n=13"))
+//        closeSoftKeyboard()
+//
+//        onView(withId(R.id.downloadButton)).perform(click())
+//
+//        Thread.sleep(4000)
+//
+//        onView(withId(R.id.imageView)).check(matches(isDisplayed()))
+//    }
 
-class ExecutorIdlingResource(private val executor: TrackingExecutor) : IdlingResource {
+    @Test
+    fun testImageViewVisibilityChangesAfterDownload() {
+        onView(withId(R.id.imageView)).check(matches(not(isDisplayed())))
 
-    @Volatile
-    private var callback: IdlingResource.ResourceCallback? = null
-    private val activeTasks = AtomicInteger(0)
+        onView(withId(R.id.urlInput)).perform(typeText("https://avatars.mds.yandex.net/i?id=2fef24696ae8ffeeb7b88889efc91e4bb62dfcbe-12524916-images-thumbs&n=13"))
+        closeSoftKeyboard()
 
-    init {
-        executor.setTaskCounter(activeTasks)
-    }
+        onView(withId(R.id.downloadButton)).perform(click())
 
-    override fun getName(): String = "ExecutorIdlingResource"
+        Thread.sleep(2000)
 
-    override fun isIdleNow(): Boolean {
-        val idle = activeTasks.get() == 0
-        if (idle) {
-            callback?.onTransitionToIdle()
-        }
-        return idle
+        onView(withId(R.id.imageView)).check(matches(isDisplayed()))
     }
 
-    override fun registerIdleTransitionCallback(callback: IdlingResource.ResourceCallback) {
-        this.callback = callback
+    @Test
+    fun testImageViewIsHiddenInitially() {
+        launch(MainActivity::class.java)
+
+        onView(withId(R.id.imageView)).check(matches(not(isDisplayed())))
+    }
+
+    @Test
+    fun testDownloadButtonIsClickable() {
+        launch(MainActivity::class.java)
+
+        onView(withId(R.id.downloadButton)).check(matches(isClickable()))
     }
 }

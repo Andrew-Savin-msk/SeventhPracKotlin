@@ -45,7 +45,8 @@ android {
 
 dependencies {
     implementation(libs.androidx.junit.ktx)
-    implementation(project(":app"))
+    implementation(libs.androidx.espresso.idling.resource)
+    implementation(libs.androidx.rules)
     testImplementation("org.robolectric:robolectric:4.11.1")
     testImplementation("org.mockito:mockito-core:4.11.0")
     testImplementation("org.mockito:mockito-inline:4.11.0")
